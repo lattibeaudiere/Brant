@@ -38,7 +38,8 @@
              {% block content %}{% endblock %}
         </div>
     </div> <!-- WRAPPER END -->
-    {# Scripts section - can be added if global scripts are needed #}
+    {# Scripts section #}
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script> {# ADD THIS LINE #}
     {% block additional_scripts %}{% endblock %} {# For page-specific scripts #}
 </body>
 </html>

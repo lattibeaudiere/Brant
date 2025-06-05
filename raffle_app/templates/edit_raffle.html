@@ -28,9 +28,13 @@
             {% for error in form.ticket_price.errors %}<span class="error-message">[{{ error }}]</span><br>{% endfor %}
         </p>
         <p>
-            {{ form.end_time.label }} (e.g., {{ raffle.end_time.strftime('%Y-%m-%d %H:%M:%S') }})<br>
-            {{ form.end_time(size=30) }}<br>
-            {% for error in form.end_time.errors %}<span class="error-message">[{{ error }}]</span><br>{% endfor %}
+            {{ form.end_date.label }}<br>
+            {# The label from the form is "Raffle End Date (defaults to 8 PM Eastern Time)" #}
+            {# Current value (date part in EST) is pre-populated by the route for GET requests #}
+            {{ form.end_date(size=30) }} {# size=30 might not be very relevant for type="date" #}
+            <br>
+            <small>The raffle will conclude at 8:00 PM Eastern Time on the selected date.</small><br>
+            {% for error in form.end_date.errors %}<span class="error-message">[{{ error }}]</span><br>{% endfor %}
         </p>
         <p>
             <input type="submit" value="Save Changes" class="button-buy-ticket">

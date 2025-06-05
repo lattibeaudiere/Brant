@@ -1,3 +1,5 @@
+// Original startCountdown function commented out for debugging:
+/*
 function startCountdown(endTime, elementId) {
     const targetDate = new Date(endTime).getTime();
     const countdownElement = document.getElementById(elementId);
@@ -32,4 +34,17 @@ function startCountdown(endTime, elementId) {
             + minutes + "m " + seconds + "s ";
         }
     }, 1000);
+}
+*/
+
+// Simplified version for debugging:
+function startCountdown(endTime, elementId) {
+    console.log("Simplified startCountdown called for element:", elementId, "with endTime:", endTime);
+    const countdownElement = document.getElementById(elementId);
+    if (countdownElement) {
+        countdownElement.innerHTML = "JS Was Here!";
+        console.log("innerHTML changed for element:", elementId);
+    } else {
+        console.error("Simplified: Countdown element not found:", elementId);
+    }
 }

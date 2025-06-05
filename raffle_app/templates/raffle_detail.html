@@ -50,37 +50,12 @@
 {% endblock %}
 
 {% block additional_scripts %}
-{# Re-use existing scripts.js if it's globally included in base.html, or include it here if not #}
-{# Note: scripts.js is currently included directly in raffles.html.
-   For this page to use it, base.html should ideally load it,
-   or we include it here too. For now, assuming startCountdown is available globally
-   if raffles.html was visited once, or base.html is updated.
-   A robust solution would be for base.html to always load scripts.js.
-#}
 <script>
-    // Check if startCountdown is defined, if not, it implies scripts.js might not have been loaded.
-    // This is a fallback/check; ideally, base.html handles global script loading.
-    if (typeof startCountdown === 'undefined') {
-        var scriptTag = document.createElement('script');
-        scriptTag.src = "{{ url_for('static', filename='js/scripts.js') }}";
-        document.body.appendChild(scriptTag); // Append to body to load it
-
-        // Need to wait for the script to load before calling startCountdown
-        scriptTag.onload = function() {
-            initializeCountdown();
-        };
-    } else {
-        initializeCountdown();
-    }
-
-    function initializeCountdown() {
-        document.addEventListener('DOMContentLoaded', function () {
-            {% if raffle.end_time > now_utc %}
-                var endDateStr = "{{ raffle.end_time.isoformat() }}Z";
-                // Use a unique ID for the countdown on this page
-                startCountdown(endDateStr, "countdown-detail-{{ raffle.id }}");
-            {% endif %}
-        });
-    }
+    document.addEventListener('DOMContentLoaded', function () {
+        {% if raffle.end_time > now_utc %}
+            var endDateStr = "{{ raffle.end_time.isoformat() }}Z";
+            startCountdown(endDateStr, "countdown-detail-{{ raffle.id }}");
+        {% endif %}
+    });
 </script>
 {% endblock %}

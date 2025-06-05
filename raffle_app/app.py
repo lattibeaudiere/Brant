@@ -6,6 +6,12 @@ from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
+# For clarity, let's specify the exact datetime imports needed if they are not already broad
+from datetime import datetime as dt # Alias to avoid conflict if 'datetime' module also used
+from datetime import time as dt_time # For time object
+
+import pytz # Should have been added in step 1 of this plan (install pytz)
+
 # Add these imports
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -163,7 +169,7 @@ class Ticket(db.Model):
 # Moved forms to app.py to avoid circular import issues for now
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed # Add this
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, FloatField, DateTimeField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, FloatField, DateTimeField, DateField # Added DateField
 from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Optional
 # import datetime # Already imported for Raffle model
 
@@ -197,9 +203,14 @@ class RaffleForm(FlaskForm):
         FileAllowed(app.config['ALLOWED_EXTENSIONS'], 'Images only!')
     ])
     ticket_price = FloatField('Ticket Price', validators=[DataRequired()])
-    # For DateTimeField, format might be needed depending on how it's handled or use WTForms-Alchemy
-    end_time = DateTimeField('End Time (YYYY-MM-DD HH:MM:SS)', format='%Y-%m-%d %H:%M:%S', validators=[DataRequired()])
-    submit = SubmitField('Create Raffle') # Text will be changed in template for edit
+
+    # Old field:
+    # end_time = DateTimeField('End Time (YYYY-MM-DD HH:MM:SS)', format='%Y-%m-%d %H:%M:%S', validators=[DataRequired()])
+
+    # New field:
+    end_date = DateField('Raffle End Date (defaults to 8 PM Eastern Time)', validators=[DataRequired()])
+
+    submit = SubmitField('Create Raffle') # Text will be changed in template for edit forms
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -256,34 +267,50 @@ def create_raffle():
             file = form.item_image.data
             if allowed_file(file.filename):
                 filename = secure_filename(file.filename)
-                # To avoid filename collisions, append a unique prefix (e.g., timestamp or UUID)
-                # For simplicity here, just using secure_filename directly.
-                # Consider adding a unique part: filename = str(uuid.uuid4()) + "_" + secure_filename(file.filename)
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             else:
                 flash('Invalid image file type.', 'danger')
                 return render_template('create_raffle.html', title='Create Raffle', form=form)
 
-        if form.end_time.data <= datetime.datetime.utcnow():
-            flash('End time must be in the future.', 'danger')
+        # Get the date from the form
+        selected_date = form.end_date.data # This is a Python date object
+
+        # Define target time and timezone
+        target_time = dt_time(20, 0, 0) # 8 PM
+        est_tz = pytz.timezone('America/New_York')
+
+        # Combine date and time to create a naive datetime
+        naive_datetime = dt.combine(selected_date, target_time)
+
+        # Localize the naive datetime to EST
+        est_datetime = est_tz.localize(naive_datetime)
+
+        # Convert EST datetime to UTC
+        utc_datetime = est_datetime.astimezone(pytz.utc)
+
+        # Let's get current time in UTC (aware) for proper comparison
+        now_utc_aware = pytz.utc.localize(dt.utcnow())
+
+        if utc_datetime <= now_utc_aware:
+            flash('The selected date (ending 8 PM EST) must be in the future.', 'danger')
         else:
             raffle = Raffle(
                 name=form.name.data,
                 description=form.description.data,
-                item_image_filename=filename, # Save filename
+                item_image_filename=filename,
                 ticket_price=form.ticket_price.data,
-                end_time=form.end_time.data,
+                end_time=utc_datetime, # Store the calculated UTC datetime
                 created_by_user_id=current_user.id
             )
             db.session.add(raffle)
             db.session.commit() # Commit to get raffle.id
 
-            # Schedule the draw job
-            # Pass a fresh app_context from the current application
+            # Schedule the draw job with the UTC datetime
             schedule_raffle_draw_job(raffle.id, raffle.end_time, app.app_context())
 
-            flash(f'Raffle "{raffle.name}" has been created successfully and scheduled for drawing!', 'success')
+            flash(f'Raffle "{raffle.name}" has been created successfully! It will end on {selected_date.strftime("%Y-%m-%d")} at 8 PM Eastern Time and the draw is scheduled.', 'success')
             return redirect(url_for('admin_dashboard'))
+
     elif request.method == 'POST':
         flash('Please correct the errors in the form.', 'danger')
 
@@ -385,48 +412,80 @@ def edit_raffle(raffle_id):
         return redirect(url_for('home'))
 
     raffle = Raffle.query.get_or_404(raffle_id)
-    form = RaffleForm(obj=raffle)
-    # form.item_image.data is not pre-filled for FileField by obj=raffle
-    original_end_time = raffle.end_time # Store before potential change by form processing
+    form = RaffleForm(obj=raffle) # Pre-populates most fields
+
+    est_tz = pytz.timezone('America/New_York')
+
+    if request.method == 'GET':
+        if raffle.end_time:
+            # Convert stored naive UTC end_time to aware UTC, then to EST for display
+            utc_end_time_aware = pytz.utc.localize(raffle.end_time)
+            est_end_time_display = utc_end_time_aware.astimezone(est_tz)
+            form.end_date.data = est_end_time_display.date()
 
     if form.validate_on_submit():
-        new_image_filename_to_save = raffle.item_image_filename # Default to current
-
+        # File handling logic
+        new_image_filename_to_save = raffle.item_image_filename
         if form.item_image.data and form.item_image.data.filename != '':
             file = form.item_image.data
             if allowed_file(file.filename):
                 new_image_filename_to_save = secure_filename(file.filename)
-                # Optional: Delete old file logic here
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], new_image_filename_to_save))
             else:
                 flash('Invalid image file type for new image.', 'danger')
+                if raffle.end_time: # Re-populate date for template display on error
+                    utc_end_time_aware = pytz.utc.localize(raffle.end_time)
+                    est_end_time_display = utc_end_time_aware.astimezone(est_tz)
+                    form.end_date.data = est_end_time_display.date()
                 return render_template('edit_raffle.html', title=f'Edit {raffle.name}', form=form, raffle=raffle)
 
-        new_end_time_from_form = form.end_time.data
-        is_end_time_changed = original_end_time != new_end_time_from_form
+        # Date and Time processing from form.end_date
+        selected_date = form.end_date.data
+        target_time = dt_time(20, 0, 0) # 8 PM EST
+        naive_datetime_form = dt.combine(selected_date, target_time)
+        est_datetime_form = est_tz.localize(naive_datetime_form)
+        utc_datetime_form_aware = est_datetime_form.astimezone(pytz.utc)
 
-        if is_end_time_changed and new_end_time_from_form <= datetime.datetime.utcnow():
-            flash('New end time must be in the future if changed.', 'danger')
+        now_utc_aware = pytz.utc.localize(dt.utcnow())
+
+        original_utc_aware = pytz.utc.localize(raffle.end_time) if raffle.end_time else None
+        is_end_time_changed_meaningfully = (original_utc_aware != utc_datetime_form_aware)
+
+        if is_end_time_changed_meaningfully and utc_datetime_form_aware <= now_utc_aware:
+            flash('The new end date (ending 8 PM EST) must be in the future if changed.', 'danger')
+            if raffle.end_time: # Re-populate for template display on error
+                current_utc_end_time = pytz.utc.localize(raffle.end_time)
+                current_est_end_time = current_utc_end_time.astimezone(est_tz)
+                form.end_date.data = current_est_end_time.date()
             return render_template('edit_raffle.html', title=f'Edit {raffle.name}', form=form, raffle=raffle)
 
-        # Update raffle object properties
+        # Update raffle object
         raffle.name = form.name.data
         raffle.description = form.description.data
         raffle.item_image_filename = new_image_filename_to_save
         raffle.ticket_price = form.ticket_price.data
-        raffle.end_time = new_end_time_from_form
 
-        db.session.commit() # Commit changes to raffle
+        new_naive_utc_for_storage = None
+        if is_end_time_changed_meaningfully or not raffle.end_time:
+             raffle.end_time = utc_datetime_form_aware.replace(tzinfo=None) # Store as naive UTC
+             new_naive_utc_for_storage = raffle.end_time
+        # else, raffle.end_time (already naive UTC) remains unchanged if not meaningfully different
 
-        # Reschedule job if end time has changed or if it was in past and now in future
-        if is_end_time_changed or \
-           (original_end_time <= datetime.datetime.utcnow() and raffle.end_time > datetime.datetime.utcnow()):
-            schedule_raffle_draw_job(raffle.id, raffle.end_time, app.app_context())
+        db.session.commit()
+
+        if is_end_time_changed_meaningfully or \
+           (original_utc_aware and original_utc_aware <= now_utc_aware and new_naive_utc_for_storage and new_naive_utc_for_storage > dt.utcnow()):
+            schedule_raffle_draw_job(raffle.id, new_naive_utc_for_storage if new_naive_utc_for_storage else raffle.end_time, app.app_context())
 
         flash(f'Raffle "{raffle.name}" has been updated successfully!', 'success')
         return redirect(url_for('admin_dashboard'))
-    elif request.method == 'POST': # Handles form validation errors on POST
-         flash('Please correct the errors in the form.', 'danger')
+
+    elif request.method == 'POST' and not form.validate_on_submit():
+        if raffle.end_time and not form.end_date.data:
+            utc_end_time = pytz.utc.localize(raffle.end_time)
+            est_end_time_display = utc_end_time.astimezone(est_tz)
+            form.end_date.data = est_end_time_display.date()
+        flash('Please correct the errors in the form.', 'danger')
 
     return render_template('edit_raffle.html', title=f'Edit {raffle.name}', form=form, raffle=raffle)
 

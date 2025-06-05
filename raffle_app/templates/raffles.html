@@ -37,16 +37,17 @@
     {% else %}
         <p>No active raffles at the moment. Check back soon!</p>
     {% endif %}
+{% endblock %} {# This closes content block #}
 
-    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            {% for raffle in raffles %}
-                {% if raffle.end_time > now_utc %}
-                    var endDateStr = "{{ raffle.end_time.isoformat() }}Z";
-                    startCountdown(endDateStr, "countdown-{{ raffle.id }}");
-                {% endif %}
-            {% endfor %}
-        });
-    </script>
+{% block additional_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        {% for raffle in raffles %}
+            {% if raffle.end_time > now_utc %}
+                var endDateStr = "{{ raffle.end_time.isoformat() }}Z";
+                startCountdown(endDateStr, "countdown-{{ raffle.id }}");
+            {% endif %}
+        {% endfor %}
+    });
+</script>
 {% endblock %}
