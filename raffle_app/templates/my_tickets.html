@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+    <h2>My Purchased Tickets</h2>
+    {% if tickets %}
+        <ul>
+            {% for ticket in tickets %}
+                <li>
+                    Raffle: <strong>{{ ticket.raffle.name }}</strong> (Ticket ID: {{ ticket.id }})<br>
+                    Purchased on: {{ ticket.purchase_time.strftime('%Y-%m-%d %H:%M:%S') }} UTC <br>
+                    Raffle Ends: {{ ticket.raffle.end_time.strftime('%Y-%m-%d %H:%M:%S') }} UTC
+                    {% if ticket.raffle.end_time <= now_utc %}
+                        <br>Status: Raffle Ended
+                        {% if ticket.raffle.winner_id %}
+                            {% if ticket.raffle.winner_id == current_user.id %}
+                                <strong style="color: green;"> - YOU WON! (Winner: {{ ticket.raffle.winner.username if ticket.raffle.winner else ('User ID ' + ticket.raffle.winner_id|string) }})</strong>
+                            {% else %}
+                                 - Winner was: {{ ticket.raffle.winner.username if ticket.raffle.winner else ('User ID ' + ticket.raffle.winner_id|string) }}
+                            {% endif %}
+                        {% else %}
+                            - Winner not yet drawn.
+                        {% endif %}
+                    {% endif %}
+                </li>
+                <hr>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You haven't purchased any tickets yet.</p>
+    {% endif %}
+{% endblock %}

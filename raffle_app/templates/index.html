@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Welcome to the Raffle App!</h1>
+    <p>Current User: {{ current_user.username if current_user.is_authenticated else "Guest" }}</p>
+    {% if current_user.is_authenticated and current_user.is_admin %}
+        <p>You are an ADMIN.</p>
+    {% endif %}
+{% endblock %}

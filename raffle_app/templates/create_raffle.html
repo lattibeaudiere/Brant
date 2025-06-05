@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+    <h2>Create New Raffle</h2>
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.name.label }}<br>
+            {{ form.name(size=50) }}<br>
+            {% for error in form.name.errors %}
+            <span style="color: red;">[{{ error }}]</span><br>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.description.label }}<br>
+            {{ form.description(rows=5, cols=50) }}<br>
+            {% for error in form.description.errors %}
+            <span style="color: red;">[{{ error }}]</span><br>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.item_image_url.label }}<br>
+            {{ form.item_image_url(size=50) }}<br>
+            {% for error in form.item_image_url.errors %}
+            <span style="color: red;">[{{ error }}]</span><br>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.ticket_price.label }}<br>
+            {{ form.ticket_price() }}<br>
+            {% for error in form.ticket_price.errors %}
+            <span style="color: red;">[{{ error }}]</span><br>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.end_time.label }} (e.g., 2024-12-31 23:59:59)<br>
+            {{ form.end_time(size=30) }}<br>
+            {% for error in form.end_time.errors %}
+            <span style="color: red;">[{{ error }}]</span><br>
+            {% endfor %}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+{% endblock %}
