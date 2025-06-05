@@ -3,3 +3,4 @@ Flask-SQLAlchemy>=2.5
 Flask-WTF>=1.0
 Werkzeug>=2.0
 Flask-Login>=0.5
+APScheduler>=3.9

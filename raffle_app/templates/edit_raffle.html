@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-    <h2>Create New Raffle</h2>
+    <h2>Edit Raffle: {{ raffle.name }}</h2>
     <form method="POST" action="" enctype="multipart/form-data"> {# ADD ENCTYPE #}
         {{ form.hidden_tag() }}
         <p>
@@ -15,6 +15,10 @@
         </p>
         <p>
             {{ form.item_image.label }}<br>
+            {% if raffle.item_image_filename %}
+                Current Image: <img src="{{ url_for('static', filename='uploads/' + raffle.item_image_filename) }}" alt="{{ raffle.name }}" style="max-width: 100px; max-height: 100px; vertical-align: middle; margin-right: 10px;">
+                <br><small>Upload new image to replace current, or leave empty to keep.</small><br>
+            {% endif %}
             {{ form.item_image() }}<br>
             {% for error in form.item_image.errors %}<span class="error-message">[{{ error }}]</span><br>{% endfor %}
         </p>
@@ -24,10 +28,13 @@
             {% for error in form.ticket_price.errors %}<span class="error-message">[{{ error }}]</span><br>{% endfor %}
         </p>
         <p>
-            {{ form.end_time.label }} (e.g., 2024-12-31 23:59:59)<br>
+            {{ form.end_time.label }} (e.g., {{ raffle.end_time.strftime('%Y-%m-%d %H:%M:%S') }})<br>
             {{ form.end_time(size=30) }}<br>
             {% for error in form.end_time.errors %}<span class="error-message">[{{ error }}]</span><br>{% endfor %}
         </p>
-        <p>{{ form.submit() }}</p>
+        <p>
+            <input type="submit" value="Save Changes" class="button-buy-ticket">
+            <a href="{{ url_for('admin_dashboard') }}" class="button-like" style="margin-left:10px;">Cancel</a>
+        </p>
     </form>
 {% endblock %}

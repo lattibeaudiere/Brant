@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="raffle-detail-container">
+        <h2>{{ raffle.name }}</h2>
+
+        {% if raffle.item_image_filename %}
+            <img src="{{ url_for('static', filename='uploads/' + raffle.item_image_filename) }}" alt="{{ raffle.name }}" class="raffle-detail-image">
+        {% endif %}
+
+        <p><strong>Description:</strong> {{ raffle.description | safe if raffle.description else 'No description provided.' }}</p>
+        <p><strong>Ticket Price:</strong> ${{ "%.2f"|format(raffle.ticket_price) }}</p>
+        <p><strong>Raffle Ends:</strong> {{ raffle.end_time.strftime('%Y-%m-%d %H:%M:%S') }} UTC</p>
+
+        {% if raffle.end_time > now_utc %}
+            <div id="countdown-detail-{{ raffle.id }}" class="countdown-timer">Loading...</div>
+
+            {% if current_user.is_authenticated %}
+                <form method="POST" action="{{ url_for('buy_ticket', raffle_id=raffle.id) }}" style="display: inline; margin-top: 15px;">
+                    <input type="submit" value="Buy Ticket (${{ "%.2f"|format(raffle.ticket_price) }})" class="button-buy-ticket">
+                </form>
+            {% else %}
+                <a href="{{ url_for('login', next=url_for('raffle_detail', raffle_id=raffle.id)) }}" class="button-like">Login to Buy Ticket</a>
+            {% endif %}
+        {% else %}
+            <p class="raffle-ended-message">This Raffle Has Ended</p>
+            {% if raffle.winner_id %}
+                <p class="winner-announcement">
+                    <strong>Winner: {{ raffle.winner.username if raffle.winner else ('User ID ' + raffle.winner_id|string) }}</strong>
+                </p>
+            {% else %}
+                {# This is the section to modify #}
+                <div class="pending-draw-container">
+                    <h4>The raffle has ended!</h4>
+                    <p>The winner will be drawn soon. Good luck!</p>
+                    <div class="drawing-placeholder">
+                        <div class="spinner"></div>
+                        <p>Awaiting Winner Selection...</p>
+                    </div>
+                </div>
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                    <form method="POST" action="{{ url_for('draw_winner', raffle_id=raffle.id) }}" style="display: block; text-align: center; margin-top: 20px;">
+                        <input type="submit" value="Draw Winner Now" class="button-admin" onclick="return confirm('Are you sure you want to draw the winner for this raffle? This cannot be undone.');">
+                    </form>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    </div>
+    <a href="{{ url_for('list_raffles') }}" class="back-link">&laquo; Back to All Raffles</a>
+
+{% endblock %}
+
+{% block additional_scripts %}
+{# Re-use existing scripts.js if it's globally included in base.html, or include it here if not #}
+{# Note: scripts.js is currently included directly in raffles.html.
+   For this page to use it, base.html should ideally load it,
+   or we include it here too. For now, assuming startCountdown is available globally
+   if raffles.html was visited once, or base.html is updated.
+   A robust solution would be for base.html to always load scripts.js.
+#}
+<script>
+    // Check if startCountdown is defined, if not, it implies scripts.js might not have been loaded.
+    // This is a fallback/check; ideally, base.html handles global script loading.
+    if (typeof startCountdown === 'undefined') {
+        var scriptTag = document.createElement('script');
+        scriptTag.src = "{{ url_for('static', filename='js/scripts.js') }}";
+        document.body.appendChild(scriptTag); // Append to body to load it
+
+        // Need to wait for the script to load before calling startCountdown
+        scriptTag.onload = function() {
+            initializeCountdown();
+        };
+    } else {
+        initializeCountdown();
+    }
+
+    function initializeCountdown() {
+        document.addEventListener('DOMContentLoaded', function () {
+            {% if raffle.end_time > now_utc %}
+                var endDateStr = "{{ raffle.end_time.isoformat() }}Z";
+                // Use a unique ID for the countdown on this page
+                startCountdown(endDateStr, "countdown-detail-{{ raffle.id }}");
+            {% endif %}
+        });
+    }
+</script>
+{% endblock %}

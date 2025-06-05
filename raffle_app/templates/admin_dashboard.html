@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Admin Dashboard</h2>
+
+<h3>Manage Raffles</h3>
+{% if raffles %}
+<table class="dashboard-table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Price</th>
+            <th>End Time</th>
+            <th>Status</th>
+            <th>Winner</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for raffle in raffles %}
+        <tr>
+            <td><a href="{{ url_for('raffle_detail', raffle_id=raffle.id) }}">{{ raffle.name }}</a></td>
+            <td>${{ "%.2f"|format(raffle.ticket_price) }}</td>
+            <td>{{ raffle.end_time.strftime('%Y-%m-%d %H:%M:%S') }} UTC</td>
+            <td>
+                {% if raffle.end_time > now_utc %}
+                    Active
+                {% else %}
+                    Ended
+                {% endif %}
+            </td>
+            <td>{{ raffle.winner.username if raffle.winner else 'N/A' }}</td>
+            <td>
+                <a href="{{ url_for('raffle_detail', raffle_id=raffle.id) }}" class="button-like btn-small">View</a>
+                <a href="{{ url_for('edit_raffle', raffle_id=raffle.id) }}" class="button-like btn-small btn-edit">Edit</a>
+                {% if raffle.end_time <= now_utc and not raffle.winner_id %}
+                <form method="POST" action="{{ url_for('draw_winner', raffle_id=raffle.id) }}" style="display: inline;">
+                    <input type="submit" value="Draw" class="button-admin btn-small" onclick="return confirm('Draw winner for {{ raffle.name }}?');">
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No raffles found. <a href="{{ url_for('create_raffle') }}">Create one now!</a></p>
+{% endif %}
+
+<h3 style="margin-top: 30px;">Manage Users (Read-Only)</h3>
+{% if users %}
+<table class="dashboard-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Is Admin?</th>
+            <th>Tickets Purchased</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ 'Yes' if user.is_admin else 'No' }}</td>
+            <td>{{ user.tickets.count() }}</td> {# Assumes lazy='dynamic' for user.tickets #}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No users found.</p>
+{% endif %}
+
+{% endblock %}

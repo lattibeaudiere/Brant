@@ -2,7 +2,7 @@
 {% block content %}
     <h2>My Purchased Tickets</h2>
     {% if tickets %}
-        <ul>
+        <ul id="my-tickets-list">
             {% for ticket in tickets %}
                 <li>
                     Raffle: <strong>{{ ticket.raffle.name }}</strong> (Ticket ID: {{ ticket.id }})<br>

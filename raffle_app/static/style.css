@@ -1,42 +1,345 @@
-/* Basic styles - can be expanded later */
+/* Reset and Base Styles */
 body {
-    font-family: sans-serif;
-    margin: 20px;
-    background-color: #f4f4f4;
-    color: #333;
+    font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif; /* Modern, clean font */
+    margin: 0;
+    padding: 0;
+    background-color: #2c2c2c; /* Dark grey background */
+    color: #e0e0e0; /* Light grey text for contrast */
+    line-height: 1.6;
 }
 
-h1 {
-    color: #0056b3;
+.container { /* Add a container for centering content */
+    width: 80%;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #383838; /* Slightly lighter grey for content area */
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
+
+h1, h2, h3 {
+    color: #ff4500; /* Bright orange-red for headings - like a racing stripe */
+    margin-top: 0;
+}
+
+h1 { font-size: 2.5em; text-align: center; margin-bottom: 20px;}
+h2 { font-size: 2em; border-bottom: 2px solid #ff4500; padding-bottom: 10px; margin-bottom: 20px;}
+h3 { font-size: 1.5em; }
+
+a {
+    color: #ff6500; /* Lighter orange for links */
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+    color: #ff8533; /* Even lighter on hover */
+}
+
+/* Navigation */
+nav {
+    background-color: #1a1a1a; /* Very dark grey for nav */
+    padding: 15px 0;
+    text-align: center;
+    border-bottom: 3px solid #ff4500;
 }
 
 nav a {
-    margin-right: 10px;
-    text-decoration: none;
-    color: #007bff;
+    margin: 0 15px;
+    color: #e0e0e0;
+    font-weight: bold;
+    font-size: 1.1em;
 }
 nav a:hover {
-    text-decoration: underline;
+    color: #ff4500;
+    text-decoration: none;
 }
 
-.alert {
-    padding: 10px;
+/* Forms */
+form {
+    margin-bottom: 20px;
+}
+
+form p {
     margin-bottom: 15px;
+}
+
+form label {
+    display: block;
+    margin-bottom: 5px;
+    color: #cccccc; /* Lighter text for labels */
+}
+
+form input[type="text"],
+form input[type="password"],
+form input[type="email"], /* If we add email later */
+form input[type="number"], /* For ticket price if needed */
+form input[type="datetime-local"], /* For datetime fields */
+form input[type="url"], /* For image URL */
+form textarea,
+form select { /* If we add select fields */
+    width: calc(100% - 22px); /* Full width minus padding and border */
+    padding: 10px;
+    border: 1px solid #555; /* Darker border */
+    border-radius: 4px;
+    background-color: #444; /* Dark input background */
+    color: #e0e0e0; /* Light text in input */
+    box-sizing: border-box;
+}
+/* Fix for WTForms specific input types if needed */
+form input[name="end_time"] { /* Example for DateTimeField if it doesn't use type="datetime-local" */
+    /* specific styles if needed */
+}
+
+
+form input[type="submit"],
+button { /* General button styling */
+    background-color: #ff4500;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+}
+
+form input[type="submit"]:hover,
+button:hover {
+    background-color: #cc3700; /* Darker orange-red on hover */
+}
+
+/* Alerts / Flash Messages */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
     border: 1px solid transparent;
     border-radius: 4px;
+    text-align: center;
 }
 .alert-success {
-    color: #155724;
-    background-color: #d4edda;
+    color: #d4edda;
+    background-color: #155724; /* Darker green */
     border-color: #c3e6cb;
 }
 .alert-danger {
-    color: #721c24;
-    background-color: #f8d7da;
+    color: #f8d7da;
+    background-color: #721c24; /* Darker red */
     border-color: #f5c6cb;
 }
 .alert-info {
-    color: #0c5460;
-    background-color: #d1ecf1;
+    color: #d1ecf1;
+    background-color: #0c5460; /* Darker blue/teal */
     border-color: #bee5eb;
+}
+.alert-warning { /* Added warning class */
+    color: #fff3cd;
+    background-color: #856404; /* Darker yellow/orange */
+    border-color: #ffeeba;
+}
+
+
+/* Raffle List Specific Styling */
+#raffles-list ul, #my-tickets-list ul { /* Assuming we add an ID to the ul in raffles.html and my_tickets.html */
+    list-style: none;
+    padding: 0;
+}
+
+#raffles-list li, #my-tickets-list li {
+    background-color: #444; /* Card background */
+    border: 1px solid #555;
+    border-left: 5px solid #ff4500; /* Accent border */
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+#raffles-list li img, #my-tickets-list li img { /* If images are shown in my-tickets */
+    max-width: 100%; /* Responsive images */
+    height: auto;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+#raffles-list li h3, #my-tickets-list li h3 { /* h3 inside cards */
+    margin-top:0;
+    color: #ff6500;
+}
+
+/* Add a class to the main content sections of each page for consistent padding/margins */
+.page-content {
+    padding: 20px;
+}
+
+/* Utility classes */
+.text-center {
+    text-align: center;
+}
+.error-message { /* For form field errors */
+    color: #ff8533; /* Lighter orange for errors */
+    font-size: 0.9em;
+}
+
+/* Raffle Detail Page Specifics */
+.raffle-detail-container {
+    background-color: #4f4f4f; /* Slightly different background for the detail card */
+    padding: 25px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+}
+
+.raffle-detail-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    display: block; /* Center if container is text-aligned center or margin auto */
+    margin-left: auto;
+    margin-right: auto;
+    border: 3px solid #ff4500;
+}
+
+.countdown-timer { /* Class for countdown spans, can be used on list and detail */
+    font-size: 1.5em;
+    color: #ffc107; /* Amber/yellow for timer */
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 5px;
+    margin: 15px 0;
+}
+
+.raffle-ended-message {
+    font-size: 1.2em;
+    color: #ff4500; /* Orange-red to indicate ended */
+    font-weight: bold;
+    text-align: center;
+}
+
+.winner-announcement {
+    font-size: 1.2em;
+    color: #28a745; /* Green for winner */
+    font-weight: bold;
+    text-align: center;
+}
+
+.button-buy-ticket, .button-like, .button-admin { /* Generalizing button styles */
+    display: inline-block;
+    text-align: center;
+    padding: 10px 15px;
+    margin-top: 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.button-buy-ticket {
+    background-color: #28a745; /* Green for buy */
+    color: white;
+    border:none;
+}
+.button-buy-ticket:hover {
+    background-color: #218838;
+}
+
+.button-like { /* For links styled as buttons */
+    background-color: #007bff; /* Blue for general actions */
+    color: white;
+}
+.button-like:hover {
+    background-color: #0056b3;
+}
+
+.button-admin { /* For admin specific actions */
+    background-color: #dc3545; /* Red for potentially destructive admin actions */
+    color: white;
+    border: none;
+}
+.button-admin:hover {
+    background-color: #c82333;
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 20px;
+    color: #ff6500;
+    font-size: 1em;
+}
+.back-link:hover {
+    color: #ff8533;
+}
+
+.pending-draw-container {
+    text-align: center;
+    padding: 20px;
+    background-color: rgba(0,0,0,0.1); /* Subtle background */
+    border-radius: 5px;
+    margin-top: 15px;
+}
+
+.pending-draw-container h4 {
+    color: #ffc107; /* Amber/yellow */
+    margin-bottom: 10px;
+}
+
+.drawing-placeholder {
+    margin-top: 15px;
+}
+
+.drawing-placeholder .spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #555; /* Darker part of spinner */
+    border-top: 5px solid #ffc107; /* Amber color for the moving part */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px auto; /* Center the spinner */
+}
+
+.drawing-placeholder p {
+    font-style: italic;
+    color: #ccc; /* Lighter text */
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 0.9em;
+}
+.dashboard-table th, .dashboard-table td {
+    border: 1px solid #555;
+    padding: 8px 12px;
+    text-align: left;
+}
+.dashboard-table th {
+    background-color: #444; /* Darker header for table */
+    color: #ffc107; /* Amber */
+}
+.dashboard-table tbody tr:nth-child(odd) {
+    background-color: #3f3f3f; /* Slightly different for odd rows */
+}
+.dashboard-table tbody tr:hover {
+    background-color: #4a4a4a; /* Row hover effect */
+}
+.btn-small {
+    padding: 5px 10px;
+    font-size: 0.8em;
+    margin-right: 5px;
+}
+.btn-edit { /* Specific color for edit button if needed, otherwise inherits button-like */
+    background-color: #ffc107; /* Amber for edit */
+    color: #2c2c2c; /* Dark text for contrast on amber */
+}
+.btn-edit:hover {
+    background-color: #e0a800;
 }

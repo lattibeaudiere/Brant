@@ -2,26 +2,20 @@
 {% block content %}
     <h2>Active Raffles</h2>
     {% if raffles %}
-        <ul>
+        <ul id="raffles-list">
             {% for raffle in raffles %}
                 <li>
                     <h3>{{ raffle.name }}</h3>
                     <p>{{ raffle.description }}</p>
-                    {% if raffle.item_image_url %}
-                        <img src="{{ raffle.item_image_url }}" alt="{{ raffle.name }}" style="max-width: 200px; max-height: 200px;">
+                    {% if raffle.item_image_filename %}
+                        <img src="{{ url_for('static', filename='uploads/' + raffle.item_image_filename) }}" alt="{{ raffle.name }}" style="max-width: 200px; max-height: 200px;">
                     {% endif %}
                     <p>Ticket Price: ${{ "%.2f"|format(raffle.ticket_price) }}</p>
                     <p>Ends: {{ raffle.end_time.strftime('%Y-%m-%d %H:%M:%S') }} UTC</p>
 
                     {% if raffle.end_time > now_utc %}
-                        <p>Time Left: {{ raffle.end_time - now_utc }}</p>
-                        {% if current_user.is_authenticated %}
-                            <form method="POST" action="{{ url_for('buy_ticket', raffle_id=raffle.id) }}" style="display: inline;">
-                                <input type="submit" value="Buy Ticket (${{ "%.2f"|format(raffle.ticket_price) }})">
-                            </form>
-                        {% else %}
-                            <a href="{{ url_for('login', next=url_for('list_raffles')) }}">Login to Buy Ticket</a>
-                        {% endif %}
+                        <p>Time Left: <span id="countdown-{{ raffle.id }}" class="countdown-timer">Loading...</span></p>
+                        <a href="{{ url_for('raffle_detail', raffle_id=raffle.id) }}" class="button-like">View Details & Buy Ticket</a>
                     {% else %}
                         <p style="color:red;">Raffle Ended</p>
                         {% if raffle.winner_id %}
@@ -30,10 +24,11 @@
                             <p>Winner not yet drawn.</p>
                             {% if current_user.is_authenticated and current_user.is_admin %}
                                 <form method="POST" action="{{ url_for('draw_winner', raffle_id=raffle.id) }}" style="display: inline;">
-                                    <input type="submit" value="Draw Winner" onclick="return confirm('Are you sure you want to draw the winner for this raffle? This cannot be undone.');">
+                                    <input type="submit" value="Draw Winner" class="button-admin" onclick="return confirm('Are you sure you want to draw the winner for this raffle? This cannot be undone.');">
                                 </form>
                             {% endif %}
                         {% endif %}
+                        <a href="{{ url_for('raffle_detail', raffle_id=raffle.id) }}" class="button-like">View Details</a>
                     {% endif %}
                 </li>
                 <hr>
@@ -42,4 +37,16 @@
     {% else %}
         <p>No active raffles at the moment. Check back soon!</p>
     {% endif %}
+
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            {% for raffle in raffles %}
+                {% if raffle.end_time > now_utc %}
+                    var endDateStr = "{{ raffle.end_time.isoformat() }}Z";
+                    startCountdown(endDateStr, "countdown-{{ raffle.id }}");
+                {% endif %}
+            {% endfor %}
+        });
+    </script>
 {% endblock %}
